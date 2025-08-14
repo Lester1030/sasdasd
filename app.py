@@ -16,8 +16,6 @@ PAGE_PATH = "page.html"
 # ===== Flask Web Server =====
 app = Flask(__name__)
 
-app = Flask(__name__)
-
 @app.route("/")
 def home():
     return send_file(PAGE_PATH)
