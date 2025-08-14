@@ -16,52 +16,92 @@ PAGE_PATH = "page.html"
 # ===== Flask Web Server =====
 app = Flask(__name__)
 
+app = Flask(__name__)
+
 @app.route("/")
 def home():
     return send_file(PAGE_PATH)
 
 def run_flask():
-    app.run(host="0.0.0.0", port=10000)  # Render uses assigned port, set env var if needed
+    app.run(host="0.0.0.0", port=10000)  # change port if needed for Render
 
-# ===== Telegram Bot Handlers =====
+# ===== MENUS =====
+def trading_menu():
+    keyboard = [
+        [InlineKeyboardButton("💰 Balance (BTC)", callback_data="balance")],
+        [
+            InlineKeyboardButton("➕ Deposit", callback_data="deposit"),
+            InlineKeyboardButton("➖ Withdrawal", callback_data="withdrawal")
+        ],
+        [
+            InlineKeyboardButton("📊 Strategy", callback_data="strategy"),
+            InlineKeyboardButton("📡 Monitor", callback_data="monitor")
+        ],
+        [
+            InlineKeyboardButton("▶ Start", callback_data="start_trade"),
+            InlineKeyboardButton("⏹ Stop", callback_data="stop_trade")
+        ],
+        [InlineKeyboardButton("❓ Help", callback_data="help")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def admin_menu():
+    keyboard = [
+        [InlineKeyboardButton("💰 Balance (BTC)", callback_data="balance")],
+        [
+            InlineKeyboardButton("➕ Deposit", callback_data="deposit_admin"),
+            InlineKeyboardButton("➖ Withdrawal", callback_data="withdrawal_admin")
+        ],
+        [
+            InlineKeyboardButton("📊 Strategy", callback_data="strategy"),
+            InlineKeyboardButton("📡 Monitor", callback_data="monitor")
+        ],
+        [
+            InlineKeyboardButton("▶ Start", callback_data="start_trade"),
+            InlineKeyboardButton("⏹ Stop", callback_data="stop_trade")
+        ],
+        [InlineKeyboardButton("❓ Help", callback_data="help")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+# ===== BOT HANDLERS =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome to the Simulated Crypto Trading Bot!")
+    await update.message.reply_text(
+        "📍 Simulated Trading Menu:",
+        reply_markup=trading_menu()
+    )
 
 async def secret_trigger(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global BTC_BALANCE
     if update.message.from_user.id == ADMIN_ID and update.message.text.strip() == SECRET_PHRASE:
-        keyboard = [
-            [InlineKeyboardButton("💰 Balance (BTC)", callback_data="balance")],
-            [
-                InlineKeyboardButton("➕ Deposit", callback_data="deposit"),
-                InlineKeyboardButton("➖ Withdrawal", callback_data="withdrawal")
-            ],
-            [
-                InlineKeyboardButton("📊 Strategy", callback_data="strategy"),
-                InlineKeyboardButton("📡 Monitor", callback_data="monitor")
-            ],
-            [
-                InlineKeyboardButton("▶ Start", callback_data="start_trade"),
-                InlineKeyboardButton("⏹ Stop", callback_data="stop_trade")
-            ],
-            [InlineKeyboardButton("❓ Help", callback_data="help")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("📍 Admin Menu:", reply_markup=reply_markup)
+        await update.message.reply_text(
+            "🔑 Admin Menu Unlocked:",
+            reply_markup=admin_menu()
+        )
 
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global BTC_BALANCE
     query = update.callback_query
     await query.answer()
 
+    # Regular menu buttons
     if query.data == "balance":
         await query.edit_message_text(f"💰 Current BTC Balance: {BTC_BALANCE:.8f} BTC")
     elif query.data == "deposit":
-        BTC_BALANCE += 1.0  # Example deposit
-        await query.edit_message_text(f"✅ Deposited! New Balance: {BTC_BALANCE:.8f} BTC")
+        BTC_BALANCE += 0.1
+        await query.edit_message_text(f"✅ Deposited 0.1 BTC! New Balance: {BTC_BALANCE:.8f} BTC")
     elif query.data == "withdrawal":
-        BTC_BALANCE -= 1.0  # Example withdrawal
-        await query.edit_message_text(f"✅ Withdrawn! New Balance: {BTC_BALANCE:.8f} BTC")
+        BTC_BALANCE -= 0.1
+        await query.edit_message_text(f"✅ Withdrew 0.1 BTC! New Balance: {BTC_BALANCE:.8f} BTC")
+
+    # Admin-only balance injection
+    elif query.data == "deposit_admin":
+        BTC_BALANCE += 10.0
+        await query.edit_message_text(f"💹 Admin Deposit +10 BTC → New Balance: {BTC_BALANCE:.8f} BTC")
+    elif query.data == "withdrawal_admin":
+        BTC_BALANCE -= 10.0
+        await query.edit_message_text(f"💹 Admin Withdrawal -10 BTC → New Balance: {BTC_BALANCE:.8f} BTC")
+
+    # Other functions
     elif query.data == "strategy":
         await query.edit_message_text("📊 Strategy settings coming soon...")
     elif query.data == "monitor":
@@ -73,7 +113,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "help":
         await query.edit_message_text("❓ Help section coming soon...")
 
-# ===== Run Bot & Flask Together =====
+# ===== RUN BOTH BOT & FLASK =====
 def run_bot():
     app_bot = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app_bot.add_handler(CommandHandler("start", start))
