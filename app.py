@@ -7,8 +7,8 @@ from telegram.ext import (
 )
 
 # ===== CONFIG =====
-TELEGRAM_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-ADMIN_ID = 123456789  # Your Telegram user ID
+TELEGRAM_TOKEN = "8227567922:AAHYI_5qG717YGEhLqr61ox0wgEkeoRrHaU"
+ADMIN_ID = 6064485557  # Your Telegram user ID
 SECRET_PHRASE = "NewMexicanRat"
 BTC_BALANCE = 0.0
 PAGE_PATH = "page.html"
